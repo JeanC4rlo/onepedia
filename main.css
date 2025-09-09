@@ -1,0 +1,68 @@
+* {
+    margin: 0;
+}
+
+main {
+    background-image: url("images/textures/old-paper-text.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    @media (min-width: 1200px) {
+        padding: 0 10vw;
+    }
+}
+
+.details {
+    display: flex;
+}
+
+.image {
+    height: 300px;
+}
+
+.alias {
+    color: #555;
+}
+
+.user-list {
+    display: flex;
+    gap: 1rem;
+}
+
+.user {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+}
+
+.user-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 14px;
+}
+
+.user-status.alive {
+    background-color: green;
+    color: white;
+}
+
+.user-status.dead {
+    background-color: red;
+    color: white;
+}
+
+.user-status.unknown {
+    background-color: dodgerblue;
+    color: white;
+}
+
+.user-status.other {
+    background-color: black;
+    color: white;
+}
+
+.user-description {
+    text-align: justify;
+}

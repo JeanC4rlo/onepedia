@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ace",
+    "name": "Portgas D. Ace",
+    "status": "Falecido",
+    "image": "images/characters/ace.jpg",
+    "description": "Portgas D. Ace era o irmão adotivo mais velho de Monkey D. Luffy, conhecido por suas habilidades de fogo concedidas pela Fruta do Fogo. Foi um pirata amado que se sacrificou para proteger seus amigos."
+  },
+  {
+    "id": "sabo",
+    "name": "Sabo",
+    "status": "Vivo",
+    "image": "images/characters/sabo.png",
+    "description": "Sabo é o irmão jurado de Luffy e Ace, um oficial de alta patente do Exército Revolucionário que possui o poder da Fruta do Fogo após a morte de Ace."
+  }
+]
