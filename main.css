@@ -3,9 +3,11 @@
 }
 
 main {
+    height: 100vh;
     background-image: url("images/textures/old-paper-text.jpg");
     background-size: cover;
     background-repeat: no-repeat;
+    background-attachment: fixed;
     @media (min-width: 1200px) {
         padding: 0 10vw;
     }
