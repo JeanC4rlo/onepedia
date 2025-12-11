@@ -7,7 +7,7 @@ on:
       - "generate.js"
       - "*.js"
       - "**/*.js"
-      - "template.html"
+      - "templates/**"
   schedule:
     - cron: "*/20 * * * *"   # a cada 20 minutos
   workflow_dispatch:
