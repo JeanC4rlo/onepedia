@@ -48,7 +48,6 @@ jobs:
 
       # 4. FORMATAR ARQUIVOS GERADOS
       - name: Formatar páginas com Prettier
-        if: env.CHANGES == 'yes'
         run: |
           echo "🎨 Formatando páginas HTML geradas..."
           npx prettier --write "wiki/**/*.html" --loglevel error || echo "Formatação completa"
