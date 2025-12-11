@@ -10,132 +10,123 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+
     steps:
-    # 1. PREPARAÇÃO
-    - name: Preparar ambiente
-      run: |
-        echo "📦 Preparando ambiente..."
-        
-    - name: Baixar código
-      uses: actions/checkout@v4
-      
-    - name: Instalar Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        
-    # 2. EXECUÇÃO
-    - name: Rodar script
-      run: |
-        echo "🚀 Executando script de geração..."
-        node generate.js
-        
-    # 3. VERIFICAÇÃO CORRIGIDA
-    - name: Verificar mudanças
-      id: check
-      run: |
-        echo "🔍 Verificando se há mudanças..."
-        
-        # Verifica se há ALGUMA mudança na pasta wiki
-        # Usa --porcelain que retorna vazio se não houver mudanças
-        if [ -z "$(git status --porcelain wiki/)" ]; then
-          echo "❌ Não há mudanças na pasta wiki"
-          echo "CHANGES=no" >> $GITHUB_ENV
-        else
-          echo "✅ Há mudanças na pasta wiki"
-          echo "CHANGES=yes" >> $GITHUB_ENV
-          
-          # Mostra o que mudou
-          echo "Arquivos modificados:"
-          git status --porcelain wiki/
-        fi
-        
-    # 4. COMMIT (se tiver mudanças) - CORRIGIDO
-    - name: Fazer commit
-      if: env.CHANGES == 'yes'
-      run: |
-        echo "💾 Configurando Git..."
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git config user.name "github-actions[bot]"
-        
-        echo "📝 Coletando slugs modificados e adicionados..."
-        
-        # Data formatada
-        DATA=$(date '+%d/%m/%Y %H:%M')
-        
-        # IMPORTANTE: Primeiro adiciona os arquivos ao staging
-        git add wiki/
-        
-        # Pega slugs ADICIONADOS (novos) - status "A" no staging
-        SLUGS_ADD=$(git diff --cached --name-status wiki/ | grep "^A" | cut -f2 | sed 's|wiki/||' | cut -d'/' -f1 | sort -u)
-        
-        # Pega slugs MODIFICADOS (já existentes) - status "M" no staging
-        SLUGS_MOD=$(git diff --cached --name-status wiki/ | grep "^M" | cut -f2 | sed 's|wiki/||' | cut -d'/' -f1 | sort -u)
-        
-        # Conta
-        QTD_ADD=$(echo "$SLUGS_ADD" | wc -w)
-        QTD_MOD=$(echo "$SLUGS_MOD" | wc -w)
-        QTD_TOTAL=$((QTD_ADD + QTD_MOD))
-        
-        echo "📝 Criando mensagem de commit..."
-        
-        # Começa mensagem com data
-        MSG="📚 Atualização Wiki - $DATA"
-        
-        # Adiciona slugs se houver
-        if [ "$QTD_TOTAL" -gt 0 ]; then
-          MSG="$MSG
-          
-        📋 SLUGS ATUALIZADOS:"
-                  
-                  # Adiciona slugs novos [Add]
-                  for SLUG in $SLUGS_ADD; do
-                    MSG="$MSG
-        [Add] $SLUG"
-                  done
-                  
-                  # Adiciona slugs modificados [Mod]
-                  for SLUG in $SLUGS_MOD; do
-                    MSG="$MSG
-        [Mod] $SLUG"
-                  done
-                  
-                  # Resumo
-                  MSG="$MSG
+      # 1. PREPARAÇÃO
+      - name: Preparar ambiente
+        run: |
+          echo "📦 Preparando ambiente..."
 
-        📊 RESUMO:
-        • Data: $DATA
-        • Adicionados: $QTD_ADD
-        • Modificados: $QTD_MOD
-        • Total: $QTD_TOTAL slug(s)"
-                else
-                  MSG="$MSG
+      - name: Baixar código
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-        ℹ️ Nenhum slug modificado"
-                fi
-                
-                echo "📝 Commitando..."
-                echo "$MSG" | git commit -F -
-                
-    # 5. PUSH (se tiver mudanças)
-    - name: Fazer push
-      if: env.CHANGES == 'yes'
-      run: |
-        echo "📤 Enviando para GitHub..."
-        git push
-        
-    # 6. FINALIZAÇÃO
-    - name: Mostrar resultado
-      run: |
-        echo " "
-        echo "══════════════════════════════════"
-        echo "✅ PROCESSO FINALIZADO"
-        
-        if [ "$CHANGES" = "yes" ]; then
-          echo "📁 Alterações salvas no GitHub"
-        else
-          echo "📭 Nenhuma alteração necessária"
-        fi
-        
-        echo "══════════════════════════════════"
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # 2. EXECUÇÃO
+      - name: Rodar script
+        run: |
+          echo "🚀 Executando script de geração..."
+          node generate.js
+
+      # 3. VERIFICAÇÃO
+      - name: Verificar mudanças
+        id: check
+        run: |
+          echo "🔍 Verificando se há mudanças..."
+
+          # Verifica se há mudanças na pasta wiki
+          if [ -z "$(git status --porcelain wiki/)" ]; then
+            echo "❌ Não há mudanças na pasta wiki"
+            echo "CHANGES=no" >> $GITHUB_ENV
+          else
+            echo "✅ Há mudanças na pasta wiki"
+            echo "CHANGES=yes" >> $GITHUB_ENV
+
+            echo "Arquivos modificados:"
+            git status --porcelain wiki/
+          fi
+
+      # 4. COMMIT (somente se houver mudanças)
+      - name: Fazer commit
+        if: env.CHANGES == 'yes'
+        run: |
+          echo "💾 Configurando Git..."
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+          echo "📝 Coletando slugs modificados e adicionados..."
+
+          DATA=$(date '+%d/%m/%Y %H:%M')
+
+          git add wiki/
+
+          SLUGS_ADD=$(git diff --cached --name-status wiki/ | grep "^A" | cut -f2 | sed 's|wiki/||' | cut -d'/' -f1 | sort -u)
+          SLUGS_MOD=$(git diff --cached --name-status wiki/ | grep "^M" | cut -f2 | sed 's|wiki/||' | cut -d'/' -f1 | sort -u)
+
+          QTD_ADD=$(echo "$SLUGS_ADD" | wc -w)
+          QTD_MOD=$(echo "$SLUGS_MOD" | wc -w)
+          QTD_TOTAL=$((QTD_ADD + QTD_MOD))
+
+          echo "📝 Criando mensagem de commit..."
+
+          MSG="📚 Atualização Wiki - $DATA"
+
+          if [ "$QTD_TOTAL" -gt 0 ]; then
+            MSG="$MSG
+
+          📋 SLUGS ATUALIZADOS:"
+            
+            for SLUG in $SLUGS_ADD; do
+              MSG="$MSG
+            [Add] $SLUG"
+            done
+
+            for SLUG in $SLUGS_MOD; do
+              MSG="$MSG
+            [Mod] $SLUG"
+            done
+
+            MSG="$MSG
+
+          📊 RESUMO:
+          • Data: $DATA
+          • Adicionados: $QTD_ADD
+          • Modificados: $QTD_MOD
+          • Total: $QTD_TOTAL slug(s)"
+          else
+            MSG="$MSG
+
+          ℹ️ Nenhum slug modificado"
+          fi
+
+          echo "📝 Commitando..."
+          echo "$MSG" | git commit -F -
+
+      # 5. PUSH
+      - name: Fazer push
+        if: env.CHANGES == 'yes'
+        run: |
+          echo "📤 Enviando para GitHub..."
+          git push
+
+      # 6. FINALIZAÇÃO
+      - name: Mostrar resultado
+        run: |
+          echo ""
+          echo "══════════════════════════════════"
+          echo "✅ PROCESSO FINALIZADO"
+
+          if [ "$CHANGES" = "yes" ]; then
+            echo "📁 Alterações salvas no GitHub"
+          else
+            echo "📭 Nenhuma alteração necessária"
+          fi
+
+          echo "══════════════════════════════════"
