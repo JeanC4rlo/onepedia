@@ -1,37 +1,52 @@
 const fs = require("fs");
 const path = require("path");
 
-const baseLink = "https://jeanc4rlo.github.io/";
+const baseLink = "https://jeanc4rlo.github.io/oneapi/";
 
 async function gerarPaginas() {
-    console.log("Baixando JSON externo...");
+    try {
+        console.log("Baixando JSON...");
+        
+        const response = await fetch(baseLink + "data/akumas.json");
+        const frutas = await response.json();
 
-    const response = await fetch(baseLink + "data/akumas.json");
-    const frutas = await response.json();
+        console.log(`Total: ${frutas.length} frutas`);
 
-    console.log("JSON carregado, total de frutas:", frutas.length);
+        const template = fs.readFileSync("template.html", "utf8");
+        
+        // Limpa pasta wiki
+        const wikiDir = "wiki";
+        if (fs.existsSync(wikiDir)) {
+            fs.rmSync(wikiDir, { recursive: true });
+        }
+        
+        fs.mkdirSync(wikiDir);
 
-    const template = fs.readFileSync("template.html", "utf8");
+        // Gera páginas
+        frutas.forEach((fruta, i) => {
+            const aliases = fruta.aliases?.join(" | ") || "";
+            
+            const page = template
+                .replace(/{{title}}/g, fruta.name || "")
+                .replace(/{{name}}/g, fruta.name || "")
+                .replace(/{{description}}/g, fruta.description || "")
+                .replace(/{{image}}/g, fruta.image || "")
+                .replace(/{{aliases}}/g, aliases);
 
-    frutas.forEach(fruta => {
-        let aliases = fruta.aliases.join(" | ");
+            const folder = path.join(wikiDir, fruta.slug);
+            fs.mkdirSync(folder, { recursive: true });
+            
+            fs.writeFileSync(path.join(folder, "index.html"), page);
+            
+            console.log(`[${i + 1}] ${fruta.slug}`);
+        });
 
-        let page = template
-            .replace(/{{title}}/g, fruta.name)
-            .replace(/{{name}}/g, fruta.name)
-            .replace(/{{description}}/g, fruta.description)
-            .replace(/{{image}}/g, fruta.image)
-            .replace(/{{aliases}}/g, aliases)
-
-        const folder = path.join("wiki", fruta.slug);
-        fs.mkdirSync(folder, { recursive: true });
-
-        fs.writeFileSync(path.join(folder, "index.html"), page);
-
-        console.log("Gerado:", fruta.slug);
-    });
-
-    console.log("Todas as páginas foram geradas!");
+        console.log("✅ Todas as páginas foram geradas!");
+        
+    } catch (error) {
+        console.error("❌ Erro:", error.message);
+        process.exit(1);
+    }
 }
 
 gerarPaginas();
