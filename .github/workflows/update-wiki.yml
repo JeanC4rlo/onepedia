@@ -9,7 +9,7 @@ on:
       - "**/*.js"
       - "templates/**"
   schedule:
-    - cron: "*/20 * * * *"   # a cada 20 minutos
+    - cron: "*/20 * * * *" # a cada 20 minutos
   workflow_dispatch:
 
 jobs:
@@ -32,21 +32,33 @@ jobs:
       - name: Instalar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
-      # 2. EXECUÇÃO
+      # 2. INSTALAR PRETTIER
+      - name: Instalar Prettier
+        run: |
+          echo "🎨 Instalando Prettier..."
+          npm install --save-dev --save-exact prettier
+
+      # 3. EXECUÇÃO
       - name: Rodar script
         run: |
           echo "🚀 Executando script de geração..."
           node generate.js
 
-      # 3. VERIFICAÇÃO
+      # 4. FORMATAR ARQUIVOS GERADOS
+      - name: Formatar páginas com Prettier
+        if: env.CHANGES == 'yes'
+        run: |
+          echo "🎨 Formatando páginas HTML geradas..."
+          npx prettier --write "wiki/**/*.html" --loglevel error || echo "Formatação completa"
+
+      # 5. VERIFICAÇÃO
       - name: Verificar mudanças
         id: check
         run: |
           echo "🔍 Verificando se há mudanças..."
 
-          # Verifica se há mudanças na pasta wiki
           if [ -z "$(git status --porcelain wiki/)" ]; then
             echo "❌ Não há mudanças na pasta wiki"
             echo "CHANGES=no" >> $GITHUB_ENV
@@ -58,15 +70,13 @@ jobs:
             git status --porcelain wiki/
           fi
 
-      # 4. COMMIT (somente se houver mudanças)
+      # 6. COMMIT (somente se houver mudanças)
       - name: Fazer commit
         if: env.CHANGES == 'yes'
         run: |
           echo "💾 Configurando Git..."
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-
-          echo "📝 Coletando slugs modificados e adicionados..."
 
           DATA=$(date '+%d/%m/%Y %H:%M')
 
@@ -79,15 +89,12 @@ jobs:
           QTD_MOD=$(echo "$SLUGS_MOD" | wc -w)
           QTD_TOTAL=$((QTD_ADD + QTD_MOD))
 
-          echo "📝 Criando mensagem de commit..."
-
           MSG="📚 Atualização Wiki - $DATA"
 
           if [ "$QTD_TOTAL" -gt 0 ]; then
             MSG="$MSG
 
           📋 SLUGS ATUALIZADOS:"
-            
             for SLUG in $SLUGS_ADD; do
               MSG="$MSG
             [Add] $SLUG"
@@ -114,14 +121,14 @@ jobs:
           echo "📝 Commitando..."
           echo "$MSG" | git commit -F -
 
-      # 5. PUSH
+      # 7. PUSH
       - name: Fazer push
         if: env.CHANGES == 'yes'
         run: |
           echo "📤 Enviando para GitHub..."
           git push
 
-      # 6. FINALIZAÇÃO
+      # 8. FINALIZAÇÃO
       - name: Mostrar resultado
         run: |
           echo ""
