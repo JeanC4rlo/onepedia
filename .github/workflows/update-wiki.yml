@@ -3,6 +3,11 @@ name: Gerar Páginas da Wiki
 on:
   push:
     branches: [ main, master ]
+    paths:
+      - "generate.js"
+      - "*.js"
+      - "**/*.js"
+      - "template.html"
   schedule:
     - cron: "*/20 * * * *"   # a cada 20 minutos
   workflow_dispatch:
