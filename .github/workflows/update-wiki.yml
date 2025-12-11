@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main, master ]
   schedule:
-    - cron: '0 0 * * *'  # Diariamente às 00:00 UTC
+    - cron: "*/20 * * * *"   # a cada 20 minutos
   workflow_dispatch:
 
 jobs:
